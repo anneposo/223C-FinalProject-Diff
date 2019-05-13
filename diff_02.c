@@ -18,15 +18,49 @@
 #define MAXPARAS 4096
 
 #define HASHLEN 200
+#define LINEBUFLEN 100
 
 #include "para.h"
 #include "util.h"
 #include "para.c"
 #include "util.c"
 
+char q_linebuf[LINEBUFLEN];
+char p_linebuf[LINEBUFLEN];
+char linematch[LINEBUFLEN];
+
+void line_by_line_diff(para* p, para* q) {
+  int count = 0;
+  int i = p->start, j;
+  //char *lbufp1, *lbufp2, *matchptr = linematch;
+  //para* qlast = q;
+  while (i < p->stop) { //if i reaches end of paragraph p
+    //int j = q->start;
+    while (q != NULL) {
+      j = q->start;
+      while (j < q->stop) { // if j reaches end of paragraph q
+        if ((strcmp(p->base[i], q->base[j])) == 0) { // if a matching line is found
+          ++count; //increment count of lines matching between p and q.
+          if (strlen(linematch) > 0) {
+            strcat(linematch, q->base[j]); //copy or concatenate matching line to linematch buffer
+          } else { strcpy(linematch, q->base[j]); }
+        }
+        ++j; //go to next line in paragraph q
+      }
+      q = para_next(q);
+    }
+    ++i; //go to next line in paragraph p
+  } //at the end of this loop, linematch buffer should contain all the matching lines between para p and q
+
+  // if (strlen(linematch) > 0) { //if linematch buffer is > 0, that means there were matching lines found
+  //   printboth(linematch);
+  //   //printf("%50s %s", ">", linematch); // print linematch line
+  // }
+
+}
 
 void side_by_side(para* p, para* q){
-  int foundmatch = 0;
+  int foundmatch;
   para* qlast = q;
   while (p != NULL) {
     qlast = q;
@@ -37,7 +71,7 @@ void side_by_side(para* p, para* q){
     q = qlast;
 
     if (foundmatch) {
-      while ((foundmatch = para_equal(p, q)) == 0) {
+      while ((foundmatch = para_equal(p, q)) == 0) { // if para_equal == 0, there is no match
         para_print(q, printright);
         q = para_next(q);
         qlast = q;
@@ -46,6 +80,11 @@ void side_by_side(para* p, para* q){
       p = para_next(p);
       q = para_next(q);
     } else {
+      // line_by_line_diff(p, q);
+      // if (strlen(linematch) > 0) {
+      //   printboth(linematch);
+      //   memset(linematch, '\0', sizeof(linematch)); //reset linematch buffer after printing
+      // } else { para_print(p, printleft); }
       para_print(p, printleft);
       p = para_next(p);
     }
@@ -182,10 +221,10 @@ int main(int argc, const char * argv[]) {
 
   para* p = para_first(strings1, count1);
   para* q = para_first(strings2, count2);
-  //int foundmatch = 0;
+
   if(showsidebyside) { side_by_side(p, q); }
 
 
-  todo_list();
+  //todo_list();
   return 0;
 }
