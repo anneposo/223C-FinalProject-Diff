@@ -22,7 +22,7 @@ para* para_make(char* base[], int filesize, int start, int stop) {
   p->stop = stop;
   p->firstline = (p == NULL || start < 0) ? NULL : p->base[start];
   p->secondline = (p == NULL || start < 0 || filesize < 2) ? NULL : p->base[start + 1];
-  
+
   return p;
 }
 
@@ -35,12 +35,12 @@ void para_destroy(para* p) { free(p); }
 
 para* para_next(para* p) {
   if (p == NULL || p->stop == p->filesize) { return NULL; }
-  
+
   int i;
   para* pnew = para_make(p->base, p->filesize, p->stop + 1, p->stop + 1);
   for (i = pnew->start; i < p->filesize && strcmp(p->base[i], "\n") != 0; ++i) { }
   pnew->stop = i;
-  
+
   if (pnew->start >= p->filesize) {
     free(pnew);
     pnew = NULL;
@@ -65,7 +65,7 @@ int para_equal(para* p, para* q) {
   if (para_size(p) != para_size(q)) { return 0; }
   if (p->start >= p->filesize || q->start >= q->filesize) { return 0; }
   int i = p->start, j = q->start, equal = 0;
-  while ((equal = strcmp(p->base[i], q->base[i])) == 0) { ++i; ++j; }
+  while ((equal = strcmp(p->base[i], q->base[j])) == 0) { ++i; ++j; }
   return 1;
 }
 
@@ -82,4 +82,3 @@ void para_printfile(char* base[], int count, void (*fp)(const char*)) {
   }
   printline();
 }
-
