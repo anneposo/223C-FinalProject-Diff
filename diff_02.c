@@ -25,6 +25,37 @@
 #include "util.c"
 
 
+void side_by_side(para* p, para* q){
+  int foundmatch = 0;
+  para* qlast = q;
+  while (p != NULL) {
+    qlast = q;
+    foundmatch = 0;
+    while (q != NULL && (foundmatch = para_equal(p, q)) == 0) {
+      q = para_next(q);
+    }
+    q = qlast;
+
+    if (foundmatch) {
+      while ((foundmatch = para_equal(p, q)) == 0) {
+        para_print(q, printright);
+        q = para_next(q);
+        qlast = q;
+      }
+      para_print(q, printboth);
+      p = para_next(p);
+      q = para_next(q);
+    } else {
+      para_print(p, printleft);
+      p = para_next(p);
+    }
+  }
+  while (q != NULL) {
+    para_print(q, printright);
+    q = para_next(q);
+  }
+}
+
 void version(void) {
   printf("\n\n\ndiff (CSUF diffutils) 1.0.0\n");
   printf("Copyright (C) 2014 CSUF\n");
@@ -39,6 +70,12 @@ void todo_list(void) {
   printf("\n\n\nTODO: check line by line in a paragraph, using '|' for differences");
   printf("\nTODO: this starter code does not yet handle printing all of fin1's paragraphs.");
   printf("\nTODO: handle the rest of diff's options\n");
+  printf("\nTODO: diff -q aka --brief (reports only whether files are different. shows nothing if files are identical)\n");
+  printf("TODO: diff -y aka --side-by-side (side by side format && prints common lines)\n");
+  printf("TODO: diff -y --left-column (prints only left column of common lines)\n");
+  printf("TODO: diff -y --suppress-common-lines (side-by-side but doesn't show common lines)\n");
+  printf("TODO: diff -c NUM (shows NUM default 3 lines of copied context)\n");
+  printf("TODO: diff -u NUM (shows NUM default 3 lines of unified context)\n");
 }
 
 char buf[BUFLEN];
@@ -138,42 +175,17 @@ void init_options_files(int argc, const char* argv[]) {
 
 
 int main(int argc, const char * argv[]) {
-  init_options_files(--argc, ++argv);
+  init_options_files(--argc, ++argv); //records input command line arguments
 
 //  para_printfile(strings1, count1, printleft);
 //  para_printfile(strings2, count2, printright);
 
   para* p = para_first(strings1, count1);
   para* q = para_first(strings2, count2);
-  int foundmatch = 0;
+  //int foundmatch = 0;
+  if(showsidebyside) { side_by_side(p, q); }
 
-  para* qlast = q;
-  while (p != NULL) {
-    qlast = q;
-    foundmatch = 0;
-    while (q != NULL && (foundmatch = para_equal(p, q)) == 0) {
-      q = para_next(q);
-    }
-    q = qlast;
 
-    if (foundmatch) {
-      while ((foundmatch = para_equal(p, q)) == 0) {
-        para_print(q, printright);
-        q = para_next(q);
-        qlast = q;
-      }
-      para_print(q, printboth);
-      p = para_next(p);
-      q = para_next(q);
-    } else {
-      para_print(p, printleft);
-      p = para_next(p);
-    }
-  }
-  while (q != NULL) {
-    para_print(q, printright);
-    q = para_next(q);
-  }
-
+  todo_list();
   return 0;
 }
