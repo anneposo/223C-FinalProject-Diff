@@ -46,7 +46,7 @@ int file_equal(para* p, para* q) { // returns 0 if files differ, 1 if files are 
       p = para_next(p);
     } else { return 0; }
   }
-  return 1;
+  return 1; // if function exits above while loop, then the two files are identical -----------FIX : does not work with report_identical function
 }
 
 void brief(para* p, para* q) {
@@ -54,6 +54,16 @@ void brief(para* p, para* q) {
       printf("Files %s and %s differ\n", files[0], files[1]);
     }
     exit(0);
+}
+
+void report_identical_files(para* p, para* q) {
+  if (file_equal(p,q) == 1) { //------------------------------------fix file_equal == 1
+    printf("Files %s and %s are identical\n", files[0], files[1]);
+    //exit(0);
+  } //else { ---------------------------------------------TODO
+    //call normal mode function
+  //}
+  exit(0);
 }
 
 void line_by_line_diff(para* p, para* q) {
