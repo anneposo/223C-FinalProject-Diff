@@ -25,37 +25,64 @@
 #include "para.c"
 #include "util.c"
 
+const char* files[2] = { NULL, NULL };
 char q_linebuf[LINEBUFLEN];
 char p_linebuf[LINEBUFLEN];
 char linematch[LINEBUFLEN];
+int foundline = 0;
+
+void brief(para* p, para* q) {
+  int foundmatch;
+  para* qlast = q;
+  while (p != NULL) {
+    qlast = q;
+    foundmatch = 0;
+    while (q != NULL && (foundmatch = para_equal(p, q)) == 0) {
+      q = para_next(q);
+    }
+    q = qlast;
+
+    if (foundmatch) {
+      p = para_next(p);
+    } else {
+      printf("Files %s and %s differ\n", files[0], files[1]);
+      exit(0);
+    }
+  }
+}
 
 void line_by_line_diff(para* p, para* q) {
   int count = 0;
-  int i = p->start, j;
+  int i = p->start, j, foundmatch, index_match;
   //char *lbufp1, *lbufp2, *matchptr = linematch;
-  //para* qlast = q;
+  para* qlast = q;
   while (i < p->stop) { //if i reaches end of paragraph p
     //int j = q->start;
     while (q != NULL) {
-      j = q->start;
+
+      if(foundmatch == 0) { //foundmatch is 0 if matching lines were found
+        j = ++index_match;
+      } else { j = q->start; }
+      foundmatch = 1; //reset foundmatch to not 0
+
       while (j < q->stop) { // if j reaches end of paragraph q
-        if ((strcmp(p->base[i], q->base[j])) == 0) { // if a matching line is found
+        if ((foundmatch = strcmp(p->base[i], q->base[j])) == 0) { // if a matching line is found
           ++count; //increment count of lines matching between p and q.
           if (strlen(linematch) > 0) {
             strcat(linematch, q->base[j]); //copy or concatenate matching line to linematch buffer
           } else { strcpy(linematch, q->base[j]); }
+          index_match = j;
         }
         ++j; //go to next line in paragraph q
       }
       q = para_next(q);
     }
+
     ++i; //go to next line in paragraph p
   } //at the end of this loop, linematch buffer should contain all the matching lines between para p and q
+  q = qlast;
 
-  // if (strlen(linematch) > 0) { //if linematch buffer is > 0, that means there were matching lines found
-  //   printboth(linematch);
-  //   //printf("%50s %s", ">", linematch); // print linematch line
-  // }
+  if (linematch > 0) { foundline = 1; }
 
 }
 
@@ -71,6 +98,7 @@ void side_by_side(para* p, para* q){
     q = qlast;
 
     if (foundmatch) {
+      //line_by_line_diff(p, q);
       while ((foundmatch = para_equal(p, q)) == 0) { // if para_equal == 0, there is no match
         para_print(q, printright);
         q = para_next(q);
@@ -80,12 +108,12 @@ void side_by_side(para* p, para* q){
       p = para_next(p);
       q = para_next(q);
     } else {
-      // line_by_line_diff(p, q);
-      // if (strlen(linematch) > 0) {
-      //   printboth(linematch);
-      //   memset(linematch, '\0', sizeof(linematch)); //reset linematch buffer after printing
-      // } else { para_print(p, printleft); }
-      para_print(p, printleft);
+      line_by_line_diff(p, q);
+      if (strlen(linematch) > 0) {
+        printboth(linematch);
+        memset(linematch, '\0', sizeof(linematch)); //reset linematch buffer after printing
+      } else { para_print(p, printleft); }
+      //para_print(p, printleft);
       p = para_next(p);
     }
   }
@@ -172,7 +200,7 @@ void showoptions(const char* file1, const char* file2) {
 
 void init_options_files(int argc, const char* argv[]) {
   int cnt = 0;
-  const char* files[2] = { NULL, NULL };
+  //const char* files[2] = { NULL, NULL };
 
   while (argc-- > 0) {
     const char* arg = *argv;
@@ -223,6 +251,7 @@ int main(int argc, const char * argv[]) {
   para* q = para_first(strings2, count2);
 
   if(showsidebyside) { side_by_side(p, q); }
+  if(showbrief) { brief(p, q); }
 
 
   //todo_list();
