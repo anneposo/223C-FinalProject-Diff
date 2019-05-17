@@ -31,24 +31,29 @@ char p_linebuf[LINEBUFLEN];
 char linematch[LINEBUFLEN];
 int foundline = 0;
 
-void brief(para* p, para* q) {
+int file_equal(para* p, para* q) { // returns 0 if files differ, 1 if files are identical
   int foundmatch;
   para* qlast = q;
   while (p != NULL) {
     qlast = q;
     foundmatch = 0;
     while (q != NULL && (foundmatch = para_equal(p, q)) == 0) {
-      q = para_next(q);
+      q = para_next(q); // if p and q are not equal, go to next paragraph in q file
     }
     q = qlast;
 
     if (foundmatch) {
       p = para_next(p);
-    } else {
-      printf("Files %s and %s differ\n", files[0], files[1]);
-      exit(0);
-    }
+    } else { return 0; }
   }
+  return 1;
+}
+
+void brief(para* p, para* q) {
+    if (file_equal(p,q) == 0) {
+      printf("Files %s and %s differ\n", files[0], files[1]);
+    }
+    exit(0);
 }
 
 void line_by_line_diff(para* p, para* q) {
