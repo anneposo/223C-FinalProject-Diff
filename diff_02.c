@@ -23,18 +23,16 @@ char p_linebuf[LINEBUFLEN];
 char linematch[LINEBUFLEN];
 int foundline = 0;
 
-void normal(para* p, para* q) {
-
-
-}
-
 int para_equal(para* p, para* q) {
   if (p == NULL || q == NULL) { return 0; }
   if (para_size(p) != para_size(q)) { return 0; }
   if (p->start >= p->filesize || q->start >= q->filesize) { return 0; }
-  int i = p->start, j = q->start, equal = 0;
-  while ((equal = strcmp(p->base[i], q->base[i])) == 0) { ++i; ++j; }
-  return 1;
+  int equal = 0, different_lines = 0;
+  for (int i = p->start, j = q->start; i <= p->stop && j <= q->stop && (equal = strcmp(p->base[i], q->base[j])) == 0; ++i, ++j) {
+    different_lines += equal == 0 ? 0 : 1;
+  }
+  //while ((equal = strcmp(p->base[i], q->base[i])) == 0) { ++i; ++j; }
+  return different_lines == 0;
 }
 
 int file_equal(para* p, para* q) { // returns 0 if files differ, 1 if files are identical
@@ -46,14 +44,11 @@ int file_equal(para* p, para* q) { // returns 0 if files differ, 1 if files are 
     while (q != NULL && (foundmatch = para_equal(p, q)) == 0) {
       q = para_next(q); // if p and q are not equal, go to next paragraph in q file
     }
-
     q = qlast;
-
     if (foundmatch) { // if paragraph p and q are equal, go to next paragraph in p file.
       p = para_next(p);
     } else { return 0; } // else, return 0 because files differ
   }
-  //if (foundmatch) { return 1; }
   return 1; // if function exits above while loop, then the two files are identical -----------FIX : does not work with report_identical function
 }
 
@@ -100,12 +95,43 @@ void line_by_line_diff(para* p, para* q) {
       }
       q = para_next(q);
     }
-
     ++i; //go to next line in paragraph p
   } //at the end of this loop, linematch buffer should contain all the matching lines between para p and q
   q = qlast;
-
   if (linematch > 0) { foundline = 1; }
+}
+
+void normal(para* p, para* q) {
+  int foundmatch;
+  para* qlast = q;
+  while (p != NULL) {
+    qlast = q;
+    foundmatch = 0;
+    while (q != NULL && (foundmatch = para_equal(p, q)) == 0) {
+      q = para_next(q);
+    }
+    q = qlast;
+
+    if (foundmatch) {
+      while ((foundmatch = para_equal(p, q)) == 0) { // if para_equal == 0, there is no match
+        para_print(q, printright_nospace);
+        printf("\n");
+        q = para_next(q);
+        qlast = q;
+      }
+      p = para_next(p);
+      q = para_next(q);
+    } else {
+      para_print(p, printleft_nospace);
+      printf("\n");
+      p = para_next(p);
+    }
+  }
+  while (q != NULL) {
+    para_print(q, printright_nospace);
+    printf("\n");
+    q = para_next(q);
+  }
 
 }
 
@@ -270,7 +296,7 @@ int main(int argc, const char * argv[]) {
   if(showsidebyside) { side_by_side(p, q); }
   if(showbrief) { brief(p, q); }
   if(report_identical) { report_identical_files(p, q); }
-
+  if(diffnormal) { normal(p,q); }
 
   //todo_list();
   return 0;
