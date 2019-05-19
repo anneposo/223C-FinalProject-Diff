@@ -74,6 +74,29 @@ void para_print(para* p, void (*fp)(const char*)) {
   for (int i = p->start; i <= p->stop && i != p->filesize; ++i) { fp(p->base[i]); }
 }
 
+void line_print(para* p, char* q) {
+  if (p == NULL) { return; }
+
+  char buf[BUFLEN];
+  size_t len = strlen(q);
+  if (len > 0) { strncpy(buf, q, len); }
+  buf[len - 1] = '\0';
+
+  //for (int i = p->start; i <= p->stop && i != p->filesize; ++i) {
+    printf("%-50s %s", buf, q);
+  //}
+}
+
+void line_diff_print(char* p, char* q) {
+  if (p == NULL) { return; }
+  char buf1[BUFLEN];
+  size_t len1 = strlen(p);
+  if (len1 > 0) { strncpy(buf1, p, len1); }
+  buf1[len1 - 1] = '\0';
+  printf("%-50s | %s", buf1, q);
+  //printf("%-50s | %s", buf2, q);
+}
+
 void para_printfile(char* base[], int count, void (*fp)(const char*)) {
   para* p = para_first(base, count);
   while (p != NULL) {

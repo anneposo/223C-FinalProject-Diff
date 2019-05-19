@@ -49,6 +49,20 @@ void printleft_nospace(const char* left) {
   printf("< %s\n", buf);
 }
 
+void printleft_leftcolumn(const char* left) {
+  char buf[BUFLEN];
+
+  strcpy(buf, left);
+  int j = 0, len = (int)strlen(buf) - 1;
+  for (j = 0; j <= 48 - len ; ++j) { buf[len + j] = ' '; }
+  //buf[len + j++] = '<';
+  buf[len + j++] = '(';
+  buf[len + j++] = '\0';
+  printf("%s\n", buf);
+  //printf("%50s", "(",)
+
+}
+
 void printright(const char* right) {
   if (right == NULL) { return; }
   printf("%50s %s", ">", right);

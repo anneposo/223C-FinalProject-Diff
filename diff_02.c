@@ -12,6 +12,7 @@
 #define HASHLEN 200
 #define LINEBUFLEN 100
 
+#include "diff.h"
 #include "para.h"
 #include "util.h"
 #include "para.c"
@@ -21,9 +22,44 @@ const char* files[2] = { NULL, NULL };
 char q_linebuf[LINEBUFLEN];
 char p_linebuf[LINEBUFLEN];
 char linematch[LINEBUFLEN];
+char match_buf[BUFLEN];
+char diff_buf[BUFLEN];
 int foundline = 0;
 
 void normal(para* p, para* q);
+
+void left_column(para* p, para* q) {
+  int foundmatch;
+  para* qlast = q;
+  while (p != NULL) {
+    qlast = q;
+    foundmatch = 0;
+    while (q != NULL && (foundmatch = para_equal(p, q)) == 0) {
+      q = para_next(q);
+    }
+    q = qlast;
+
+    if (foundmatch) {
+      while ((foundmatch = para_equal(p, q)) == 0) { // if para_equal == 0, there is no match
+        para_print(q, printright);
+        q = para_next(q);
+        qlast = q;
+      }
+      //para_print(q, printboth);
+      para_print(p, printleft_leftcolumn);
+      p = para_next(p);
+      q = para_next(q);
+    } else {
+      para_print(p, printleft);
+      p = para_next(p);
+    }
+  }
+  while (q != NULL) {
+    para_print(q, printright);
+    q = para_next(q);
+  }
+  exit(0);
+}
 
 int para_equal(para* p, para* q) {
   if (p == NULL || q == NULL) { return 0; }
@@ -31,7 +67,7 @@ int para_equal(para* p, para* q) {
   if (p->start >= p->filesize || q->start >= q->filesize) { return 0; }
   int equal = 0, different_lines = 0;
   for (int i = p->start, j = q->start; i <= p->stop && j <= q->stop && (equal = strcmp(p->base[i], q->base[j])) == 0; ++i, ++j) {
-    different_lines += equal == 0 ? 0 : 1;
+    different_lines += equal == 0 ? 0 : 1; //if different_lines is 0, the two paragraphs are equal
   }
   //while ((equal = strcmp(p->base[i], q->base[i])) == 0) { ++i; ++j; }
   return different_lines == 0;
@@ -72,37 +108,37 @@ void report_identical_files(para* p, para* q, int brief) {
   return;
 }
 
-void line_by_line_diff(para* p, para* q) {
-  int count = 0;
-  int i = p->start, j, foundmatch, index_match;
-  //char *lbufp1, *lbufp2, *matchptr = linematch;
-  para* qlast = q;
-  while (i < p->stop) { //if i reaches end of paragraph p
-    //int j = q->start;
-    while (q != NULL) {
-
-      if(foundmatch == 0) { //foundmatch is 0 if matching lines were found
-        j = ++index_match;
-      } else { j = q->start; }
-      foundmatch = 1; //reset foundmatch to not 0
-
-      while (j < q->stop) { // if j reaches end of paragraph q
-        if ((foundmatch = strcmp(p->base[i], q->base[j])) == 0) { // if a matching line is found
-          ++count; //increment count of lines matching between p and q.
-          if (strlen(linematch) > 0) {
-            strcat(linematch, q->base[j]); //copy or concatenate matching line to linematch buffer
-          } else { strcpy(linematch, q->base[j]); }
-          index_match = j;
-        }
-        ++j; //go to next line in paragraph q
-      }
-      q = para_next(q);
-    }
-    ++i; //go to next line in paragraph p
-  } //at the end of this loop, linematch buffer should contain all the matching lines between para p and q
-  q = qlast;
-  if (linematch > 0) { foundline = 1; }
-}
+// void line_diff (para* p, para* q) { //for implementing | to show diff lines
+//   int j = q->start, i = p->start, equal = 0, different_lines = 0;
+//   int lastj = q->start, diff_index;
+//
+//   while (i <= p->stop) { // searches through the current paragraph in p
+//     //while (q != NULL) { //searches through all the remaining paragraphs in file q
+//     while(j <= q->stop && (equal = strcmp(p->base[i], q->base[j])) == 0) {
+//       //for (j = q->start; j <= q->stop && (equal = strcmp(p->base[i], q->base[j])) == 0; ++j) {
+//         different_lines += equal == 0 ? 0 : 1; //record if the lines are equal in different_lines
+//         //printf ("%s %s", p->base[i], q->base[j]);
+//         line_print(q, q->base[j]);
+//         //strcat(match_buf, p->base[i]); //strcat matching line to buf1
+//         ++i;
+//         ++j;
+//     }
+//       if (different_lines) { //if lines are different
+//         line_diff_print(p->base[i], q->base[j]);
+//         //printf ("%s| %s", p->base[i], q->base[j]);
+//         strcat(diff_buf, p->base[i]); //strcat diff line to buf2
+//         diff_index = i; //record index of where diff line was found in file p
+//         //printboth_line_diff(p->base[i], q->base[j]);
+//         //lastj = j;
+//         //++j;
+//       } else { line_print(q, q->base[j]); }
+//       //q = para_next(q); //check next paragraph in file q for matching/diff lines
+//     //}
+//     ++j;
+//     ++i;
+//   }
+//   return;
+// }
 
 void normal(para* p, para* q) {
   int foundmatch;
@@ -118,7 +154,7 @@ void normal(para* p, para* q) {
     if (foundmatch) {
       while ((foundmatch = para_equal(p, q)) == 0) { // if para_equal == 0, there is no match
         para_print(q, printright_nospace);
-        printf("\n");
+        //printf("\n");
         q = para_next(q);
         qlast = q;
       }
@@ -126,19 +162,19 @@ void normal(para* p, para* q) {
       q = para_next(q);
     } else {
       para_print(p, printleft_nospace);
-      printf("\n");
+      //printf("\n");
       p = para_next(p);
     }
   }
   while (q != NULL) {
     para_print(q, printright_nospace);
-    printf("\n");
+    //printf("\n");
     q = para_next(q);
   }
 
 }
 
-void side_by_side(para* p, para* q){
+void side_by_side(para* p, para* q, int suppresscommon){
   int foundmatch;
   para* qlast = q;
   while (p != NULL) {
@@ -155,10 +191,15 @@ void side_by_side(para* p, para* q){
         q = para_next(q);
         qlast = q;
       }
-      para_print(q, printboth);
+      if (!suppresscommon) {
+        para_print(q, printboth);
+        //line_diff(p,q);
+      }
       p = para_next(p);
       q = para_next(q);
-    } else {
+    } else { // if no match is found
+      //call line_diff that searches for different lines and also calls a modified para_print(both)
+      //line_diff(p, q);
       para_print(p, printleft);
       p = para_next(p);
     }
@@ -190,13 +231,6 @@ void todo_list(void) {
   printf("TODO: diff -c NUM (shows NUM default 3 lines of copied context)\n");
   printf("TODO: diff -u NUM (shows NUM default 3 lines of unified context)\n");
 }
-
-char buf[BUFLEN];
-char *strings1[MAXSTRINGS], *strings2[MAXSTRINGS];
-int showversion = 0, showbrief = 0, ignorecase = 0, report_identical = 0, showsidebyside = 0;
-int showleftcolumn = 0, showunified = 0, showcontext = 0, suppresscommon = 0, diffnormal = 0;
-
-int count1 = 0, count2 = 0;
 
 
 void loadfiles(const char* filename1, const char* filename2) {
@@ -296,11 +330,12 @@ int main(int argc, const char * argv[]) {
   para* p = para_first(strings1, count1);
   para* q = para_first(strings2, count2);
 
-  if(showsidebyside)                { side_by_side(p, q); }
-  if(report_identical && showbrief) { brief(p, q); report_identical_files(p, q, showbrief); exit(0); }
-  if(showbrief)                     { brief(p, q); exit(0); }
-  if(report_identical)              { report_identical_files(p, q, showbrief); exit(0); }
-  if(diffnormal)                    { normal(p,q); }
+  if(showsidebyside && showleftcolumn) { left_column(p, q); }
+  if(showsidebyside)                   { side_by_side(p, q, suppresscommon); }
+  if(report_identical && showbrief)    { brief(p, q); report_identical_files(p, q, showbrief); exit(0); }
+  if(showbrief)                        { brief(p, q); exit(0); }
+  if(report_identical)                 { report_identical_files(p, q, showbrief); exit(0); }
+  if(diffnormal)                       { normal(p, q); }
 
   //todo_list();
   return 0;
