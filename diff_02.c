@@ -23,6 +23,8 @@ char p_linebuf[LINEBUFLEN];
 char linematch[LINEBUFLEN];
 int foundline = 0;
 
+void normal(para* p, para* q);
+
 int para_equal(para* p, para* q) {
   if (p == NULL || q == NULL) { return 0; }
   if (para_size(p) != para_size(q)) { return 0; }
@@ -49,7 +51,7 @@ int file_equal(para* p, para* q) { // returns 0 if files differ, 1 if files are 
       p = para_next(p);
     } else { return 0; } // else, return 0 because files differ
   }
-  return 1; // if function exits above while loop, then the two files are identical -----------FIX : does not work with report_identical function
+  return 1; // if function exits above while loop, then the two files are identical
 }
 
 void brief(para* p, para* q) {
@@ -60,12 +62,9 @@ void brief(para* p, para* q) {
 }
 
 void report_identical_files(para* p, para* q) {
-  if (file_equal(p,q) == 1) { //------------------------------------fix file_equal == 1
+  if (file_equal(p,q) == 1) {
     printf("Files %s and %s are identical\n", files[0], files[1]);
-    //exit(0);
-  } //else { ---------------------------------------------TODO
-    //call normal mode function
-  //}
+  } else { normal(p, q); }
   exit(0);
 }
 
