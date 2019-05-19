@@ -58,14 +58,18 @@ void brief(para* p, para* q) {
     if (file_equal(p, q) == 0) {
       printf("Files %s and %s differ\n", files[0], files[1]);
     }
-    exit(0);
+    return;
 }
 
-void report_identical_files(para* p, para* q) {
+void report_identical_files(para* p, para* q, int brief) {
   if (file_equal(p,q) == 1) {
     printf("Files %s and %s are identical\n", files[0], files[1]);
-  } else { normal(p, q); }
-  exit(0);
+  } else {
+    if(!brief) {
+      normal(p, q);
+    } else { return; }
+  }
+  return;
 }
 
 void line_by_line_diff(para* p, para* q) {
@@ -292,10 +296,11 @@ int main(int argc, const char * argv[]) {
   para* p = para_first(strings1, count1);
   para* q = para_first(strings2, count2);
 
-  if(showsidebyside) { side_by_side(p, q); }
-  if(showbrief) { brief(p, q); }
-  if(report_identical) { report_identical_files(p, q); }
-  if(diffnormal) { normal(p,q); }
+  if(showsidebyside)                { side_by_side(p, q); }
+  if(report_identical && showbrief) { brief(p, q); report_identical_files(p, q, showbrief); exit(0); }
+  if(showbrief)                     { brief(p, q); exit(0); }
+  if(report_identical)              { report_identical_files(p, q, showbrief); exit(0); }
+  if(diffnormal)                    { normal(p,q); }
 
   //todo_list();
   return 0;
