@@ -13,10 +13,6 @@ text that is outdated.
 It will be deleted in the
 near future.
 
-testestestestest
-testestest
-testtesttesttest
-
 It is important to spell
 check this dokument. On
 the other hand, a
