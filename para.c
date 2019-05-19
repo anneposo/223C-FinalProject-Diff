@@ -60,14 +60,14 @@ char* para_info(para* p) {
   return buf;  // buf MUST be static
 }
 
-int para_equal(para* p, para* q) {
-  if (p == NULL || q == NULL) { return 0; }
-  if (para_size(p) != para_size(q)) { return 0; }
-  if (p->start >= p->filesize || q->start >= q->filesize) { return 0; }
-  int i = p->start, j = q->start, equal = 0;
-  while ((equal = strcmp(p->base[i], q->base[j])) == 0) { ++i; ++j; }
-  return 1;
-}
+// int para_equal(para* p, para* q) {
+//   if (p == NULL || q == NULL) { return 0; }
+//   if (para_size(p) != para_size(q)) { return 0; }
+//   if (p->start >= p->filesize || q->start >= q->filesize) { return 0; }
+//   int i = p->start, j = q->start, equal = 0;
+//   while ((equal = strcmp(p->base[i], q->base[j])) == 0) { ++i; ++j; }
+//   return 1;
+// }
 
 void para_print(para* p, void (*fp)(const char*)) {
   if (p == NULL) { return; }
