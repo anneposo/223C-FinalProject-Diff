@@ -4,36 +4,12 @@
 #include <time.h>
 #include <sys/stat.h> //for getting a file's modified date
 
-#define ARGC_ERROR 1
-#define TOOMANYFILES_ERROR 2
-#define CONFLICTING_OUTPUT_OPTIONS 3
-
-#define MAXSTRINGS 1024
-#define MAXPARAS 4096
-
-#define HASHLEN 200
-#define LINEBUFLEN 100
-
 #include "diff.h"
-#include "para.h"
-#include "util.h"
-#include "para.c"
+//#include "para.h"
+//#include "util.h"
 #include "util.c"
+#include "para.c"
 
-const char* files[2] = { NULL, NULL };
-char q_linebuf[LINEBUFLEN];
-char p_linebuf[LINEBUFLEN];
-char linematch[LINEBUFLEN];
-char match_buf[BUFLEN];
-char diff_buf[BUFLEN];
-int foundline = 0;
-
-char *filepath1;
-char *filepath2;
-char pathbuf1[BUFLEN]; //stores absolute file path for files[0] (1st file)
-char pathbuf2[BUFLEN]; //stores absolute file path for files[1] (2nd file)
-char mod_date1[BUFLEN]; //stores modified date of file 1
-char mod_date2[BUFLEN]; //stores modified date of file 2
 
 void normal(para* p, para* q);
 
@@ -42,7 +18,6 @@ void get_modified_date(char* filepath, char* date_buf) {
   stat(filepath, &buf);
   strftime(date_buf, BUFLEN, "%Y-%m-%d %H:%M:%S", localtime(&buf.st_mtime));
 }
-
 
 void get_filepaths(const char* filename1, const char* filename2) {
   filepath1 = realpath(filename1, pathbuf1); //realpath finds absolute path of input filename - for stat()
