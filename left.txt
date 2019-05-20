@@ -8,11 +8,6 @@ would not be helping to
 compress the size of the
 changes.
 
-test test test test test
-test test test test
-test testtesttesttesttest
-testtesttesttesttestestest
-
 This paragraph contains
 text that is outdated.
 It will be deleted in the

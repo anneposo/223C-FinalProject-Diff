@@ -107,7 +107,6 @@ void context(para* p, para* q) {
       while ((foundmatch = para_equal(p, q)) == 0) { // if para_equal == 0, there is no match
         printf("*** %d,%d ****\n", q->start+1, q->start+3);
         printf("--- %d,%d ----\n", p->start+1, p->stop);
-        //printf("--- %d,%d ----\n");
         para_print(q, print_conext_add);
         q = para_next(q);
         qlast = q;
@@ -146,7 +145,6 @@ void left_column(para* p, para* q) {
         q = para_next(q);
         qlast = q;
       }
-      //para_print(q, printboth);
       para_print(p, printleft_leftcolumn);
       p = para_next(p);
       q = para_next(q);
@@ -312,13 +310,13 @@ void side_by_side(para* p, para* q, int suppresscommon){
 }
 
 void version(void) {
-  printf("\n\n\ndiff (CSUF diffutils) 1.0.0\n");
+  printf("diff (CSUF diffutils) 1.0.0\n");
   printf("Copyright (C) 2014 CSUF\n");
   printf("This program comes with NO WARRANTY, to the extent permitted by law.\n");
   printf("You may redistribute copies of this program\n");
   printf("under the terms of the GNU General Public License.\n");
   printf("For more information about these matters, see the file named COPYING.\n");
-  printf("Written by Anne Poso\n");
+  printf("\nWritten by Anne Poso.\n");
 }
 
 
@@ -369,10 +367,10 @@ void showoptions(const char* file1, const char* file2) {
 
 void init_options_files(int argc, const char* argv[]) {
   int cnt = 0;
-  //const char* files[2] = { NULL, NULL };
 
   while (argc-- > 0) {
     const char* arg = *argv;
+    ++argv;
     setoption(arg, "-v",       "--version",                  &showversion);
     setoption(arg, "-q",       "--brief",                    &showbrief);
     setoption(arg, "-i",       "--ignore-case",              &ignorecase);
@@ -390,7 +388,6 @@ void init_options_files(int argc, const char* argv[]) {
         exit(TOOMANYFILES_ERROR);
       } else { files[cnt++] = arg; }
     }
-    ++argv;   // DEBUG only;  move increment up to top of switch at release
   }
 
   if (!showcontext && !showunified && !showsidebyside && !showleftcolumn) {
