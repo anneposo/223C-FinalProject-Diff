@@ -64,4 +64,6 @@ int   para_equal(para* p, para* q);
 void para_print(para* p, void (*fp)(const char*));
 void para_printfile(char* base[], int count, void (*fp)(const char*));
 
+void normal(para* p, para* q);
+
 #endif

@@ -8,7 +8,7 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include "util.h"
+#include "diff.h"
 
 #define BUFLEN 256
 
