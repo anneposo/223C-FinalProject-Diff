@@ -5,7 +5,88 @@
 #include <sys/stat.h> //for getting a file's modified date
 
 #include "diff.h"
-#include "util.c"
+
+char* yesorno(int condition) { return condition == 0 ? "no" : "YES"; }
+
+FILE* openfile(const char* filename, const char* openflags) {
+  FILE* f;
+  if ((f = fopen(filename, openflags)) == NULL) {  printf("can't open '%s'\n", filename);  exit(1); }
+  return f;
+}
+
+void printline(void) {
+  for (int i = 0; i < 10; ++i) { printf("=========="); }
+  printf("\n");
+}
+
+void printleft(const char* left) {
+  char buf[BUFLEN];
+
+  strcpy(buf, left);
+  int j = 0, len = (int)strlen(buf) - 1;
+  for (j = 0; j <= 48 - len ; ++j) { buf[len + j] = ' '; }
+  buf[len + j++] = '<';
+  buf[len + j++] = '\0';
+  printf("%s\n", buf);
+}
+
+void printleft_nospace(const char* left) {
+  char buf[BUFLEN];
+
+  strcpy(buf, left);
+  int j = 0, len = (int)strlen(buf) - 1;
+  for (j = 0; j <= 48 - len ; ++j) { buf[len + j] = ' '; }
+  //buf[len + j++] = '<';
+  buf[len + j++] = '\0';
+  printf("< %s\n", buf);
+}
+
+void printleft_leftcolumn(const char* left) {
+  char buf[BUFLEN];
+
+  strcpy(buf, left);
+  int j = 0, len = (int)strlen(buf) - 1;
+  for (j = 0; j <= 48 - len ; ++j) { buf[len + j] = ' '; }
+  //buf[len + j++] = '<';
+  buf[len + j++] = '(';
+  buf[len + j++] = '\0';
+  printf("%s\n", buf);
+  //printf("%50s", "(",)
+
+}
+
+void print_conext_add(const char* right) {
+  if (right == NULL) { return; }
+  printf("+ %s", right);
+}
+
+void print_context_delete(const char* right) {
+  if (right == NULL) { return; }
+  printf("- %s", right);
+}
+
+void printright_blank(const char* right) {
+  if (right == NULL) { return; }
+  printf("  %s", right);
+}
+
+void printright(const char* right) {
+  if (right == NULL) { return; }
+  printf("%50s %s", ">", right);
+}
+
+void printright_nospace(const char* right) {
+  if (right == NULL) { return; }
+  printf("> %s", right);
+}
+
+void printboth(const char* left_right) {
+  char buf[BUFLEN];
+  size_t len = strlen(left_right);
+  if (len > 0) { strncpy(buf, left_right, len); }
+  buf[len - 1] = '\0';
+  printf("%-50s %s", buf, left_right);
+}
 
 para* para_make(char* base[], int filesize, int start, int stop) {
   para* p = (para*) malloc(sizeof(para));
