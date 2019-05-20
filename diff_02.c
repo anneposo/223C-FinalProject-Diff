@@ -49,6 +49,45 @@ void get_filepaths(const char* filename1, const char* filename2) {
   filepath2 = realpath(filename2, pathbuf2);
 }
 
+void unified(para* p, para* q) {
+  printf("***%s\t%s\n", files[0], mod_date1);
+  printf("---%s\t%s\n", files[1], mod_date2);
+  printf("***************\n");
+
+  int foundmatch;
+  para* qlast = q;
+  while (p != NULL) {
+    qlast = q;
+    foundmatch = 0;
+    while (q != NULL && (foundmatch = para_equal(p, q)) == 0) {
+      q = para_next(q);
+    }
+    q = qlast;
+
+    if (foundmatch) {
+      while ((foundmatch = para_equal(p, q)) == 0) { // if para_equal == 0, there is no match
+        printf("@@ %d,%d +%d,%d @@\n", q->start+1*-1, q->start+3, p->start+1, p->stop);
+        para_print(q, print_conext_add);
+        q = para_next(q);
+        qlast = q;
+      }
+      para_print_context(p, printright_blank);
+      printf("@@ -%d,%d +%d,%d @@\n", p->stop-1, p->filesize-11, p->stop+5, p->stop-1);
+      para_print_context_end(p, printright_blank);
+      p = para_next(p);
+      q = para_next(q);
+    } else {
+      para_print(p, print_context_delete);
+      p = para_next(p);
+    }
+  }
+  while (q != NULL) {
+    para_print(q, print_conext_add);
+    q = para_next(q);
+  }
+}
+
+
 void context(para* p, para* q) {
   printf("***%s\t%s\n", files[0], mod_date1);
   printf("---%s\t%s\n", files[1], mod_date2);
@@ -79,23 +118,15 @@ void context(para* p, para* q) {
       para_print_context_end(p, printright_blank);
       p = para_next(p);
       q = para_next(q);
-    } //else {
-    if(!foundmatch) {
-      // printf("***************\n");
-      // printf("*** %d,%d ****\n", q->start, q->start+3);
-      // printf("  compress the size of the\n  changes.\n\n");
-
+    } else {
       para_print(p, print_context_delete);
-      //printf("\n");
       p = para_next(p);
     }
   }
   while (q != NULL) {
     para_print(q, print_conext_add);
-    //printf("\n");
     q = para_next(q);
   }
-
 }
 
 void left_column(para* p, para* q) {
@@ -398,6 +429,7 @@ int main(int argc, const char * argv[]) {
   if(report_identical)                 { report_identical_files(p, q, showbrief); exit(0); }
   if(diffnormal)                       { normal(p, q); }
   if(showcontext)                      { context(p, q); exit(0); }
+  if(showunified)                     { unified(p, q); exit(0); }
 
 
   return 0;
