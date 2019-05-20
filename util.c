@@ -63,6 +63,21 @@ void printleft_leftcolumn(const char* left) {
 
 }
 
+void print_conext_add(const char* right) {
+  if (right == NULL) { return; }
+  printf("+ %s", right);
+}
+
+void print_context_delete(const char* right) {
+  if (right == NULL) { return; }
+  printf("- %s", right);
+}
+
+void printright_blank(const char* right) {
+  if (right == NULL) { return; }
+  printf("  %s", right);
+}
+
 void printright(const char* right) {
   if (right == NULL) { return; }
   printf("%50s %s", ">", right);

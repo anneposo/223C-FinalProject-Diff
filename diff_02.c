@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include <sys/stat.h> //for getting a file's modified date
 
 #define ARGC_ERROR 1
 #define TOOMANYFILES_ERROR 2
@@ -26,7 +28,75 @@ char match_buf[BUFLEN];
 char diff_buf[BUFLEN];
 int foundline = 0;
 
+char *filepath1;
+char *filepath2;
+char pathbuf1[BUFLEN]; //stores absolute file path for files[0] (1st file)
+char pathbuf2[BUFLEN]; //stores absolute file path for files[1] (2nd file)
+char mod_date1[BUFLEN]; //stores modified date of file 1
+char mod_date2[BUFLEN]; //stores modified date of file 2
+
 void normal(para* p, para* q);
+
+void get_modified_date(char* filepath, char* date_buf) {
+  struct stat buf; //stat obtains info about the named file and writes it into buf
+  stat(filepath, &buf);
+  strftime(date_buf, BUFLEN, "%Y-%m-%d %H:%M:%S", localtime(&buf.st_mtime));
+}
+
+
+void get_filepaths(const char* filename1, const char* filename2) {
+  filepath1 = realpath(filename1, pathbuf1); //realpath finds absolute path of input filename - for stat()
+  filepath2 = realpath(filename2, pathbuf2);
+}
+
+void context(para* p, para* q) {
+  printf("***%s\t%s\n", files[0], mod_date1);
+  printf("---%s\t%s\n", files[1], mod_date2);
+  printf("***************\n");
+
+  int foundmatch;
+  para* qlast = q;
+  while (p != NULL) {
+    qlast = q;
+    foundmatch = 0;
+    while (q != NULL && (foundmatch = para_equal(p, q)) == 0) {
+      q = para_next(q);
+    }
+    q = qlast;
+
+    if (foundmatch) {
+      while ((foundmatch = para_equal(p, q)) == 0) { // if para_equal == 0, there is no match
+        printf("*** %d,%d ****\n", q->start+1, q->start+3);
+        printf("--- %d,%d ----\n", p->start+1, p->stop);
+        //printf("--- %d,%d ----\n");
+        para_print(q, print_conext_add);
+        q = para_next(q);
+        qlast = q;
+      }
+      para_print_context(p, printright_blank);
+      printf("***************\n");
+      printf("*** %d,%d ****\n", p->stop-1, p->filesize-4);
+      para_print_context_end(p, printright_blank);
+      p = para_next(p);
+      q = para_next(q);
+    } //else {
+    if(!foundmatch) {
+      // printf("***************\n");
+      // printf("*** %d,%d ****\n", q->start, q->start+3);
+      // printf("  compress the size of the\n  changes.\n\n");
+
+      para_print(p, print_context_delete);
+      //printf("\n");
+      p = para_next(p);
+    }
+  }
+  while (q != NULL) {
+    para_print(q, print_conext_add);
+    //printf("\n");
+    q = para_next(q);
+  }
+
+}
 
 void left_column(para* p, para* q) {
   int foundmatch;
@@ -217,19 +287,7 @@ void version(void) {
   printf("You may redistribute copies of this program\n");
   printf("under the terms of the GNU General Public License.\n");
   printf("For more information about these matters, see the file named COPYING.\n");
-  printf("Written by William McCarthy, Tony Stark, and Dr. Steven Strange\n");
-}
-
-void todo_list(void) {
-  printf("\n\n\nTODO: check line by line in a paragraph, using '|' for differences");
-  printf("\nTODO: this starter code does not yet handle printing all of fin1's paragraphs.");
-  printf("\nTODO: handle the rest of diff's options\n");
-  printf("\nTODO: diff -q aka --brief (reports only whether files are different. shows nothing if files are identical)\n");
-  printf("TODO: diff -y aka --side-by-side (side by side format && prints common lines)\n");
-  printf("TODO: diff -y --left-column (prints only left column of common lines)\n");
-  printf("TODO: diff -y --suppress-common-lines (side-by-side but doesn't show common lines)\n");
-  printf("TODO: diff -c NUM (shows NUM default 3 lines of copied context)\n");
-  printf("TODO: diff -u NUM (shows NUM default 3 lines of unified context)\n");
+  printf("Written by Anne Poso\n");
 }
 
 
@@ -318,6 +376,9 @@ void init_options_files(int argc, const char* argv[]) {
 
   //showoptions(files[0], files[1]);
   loadfiles(files[0], files[1]);
+  get_filepaths(files[0], files[1]); //gets absolute filepaths for file1 and file2 and stores it in pathbuf1, pathbuf2
+  get_modified_date(pathbuf1, mod_date1); //gets modified date of file 1 and stores it in mod_date1
+  get_modified_date(pathbuf2, mod_date2); //gets modified date of file 2 and stores it in mod_date2
 }
 
 
@@ -336,7 +397,8 @@ int main(int argc, const char * argv[]) {
   if(showbrief)                        { brief(p, q); exit(0); }
   if(report_identical)                 { report_identical_files(p, q, showbrief); exit(0); }
   if(diffnormal)                       { normal(p, q); }
+  if(showcontext)                      { context(p, q); exit(0); }
 
-  //todo_list();
+
   return 0;
 }
